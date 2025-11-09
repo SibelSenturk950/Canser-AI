@@ -81,4 +81,11 @@
 - [x] Remove Manus mentions from README.md
 - [x] Check frontend files for Manus references
 - [x] Keep "by Sibel" attribution
+- [x] Push updated version to GitHub
+
+## Phase 9: Remove Backend Manus Comments
+- [x] Remove Manus comments from server/_core/map.ts
+- [x] Remove Manus comments from server/_core/notification.ts
+- [x] Remove Manus comments from server/_core/sdk.ts
+- [x] Remove Manus comments from server/storage.ts
 - [ ] Push updated version to GitHub
