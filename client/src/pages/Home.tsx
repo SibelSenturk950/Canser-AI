@@ -194,12 +194,9 @@ export default function Home() {
 
         {/* Main Dashboard Tabs - NO GENOMICS TAB */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white border border-gray-200">
+          <TabsList className="grid w-full grid-cols-3 bg-white border border-gray-200">
             <TabsTrigger value="overview" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               Overview
-            </TabsTrigger>
-            <TabsTrigger value="studies" className="data-[state=active]:bg-green-50 data-[state=active]:text-green-700">
-              Studies
             </TabsTrigger>
             <TabsTrigger value="outcomes" className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700">
               Outcomes
@@ -297,34 +294,6 @@ export default function Home() {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          {/* Studies Tab - NEW */}
-          <TabsContent value="studies" className="space-y-6">
-            <Card className="border-green-100">
-              <CardHeader>
-                <CardTitle className="text-gray-900">Recent Cancer Research Studies</CardTitle>
-                <CardDescription>Latest published studies from cBioPortal</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {cbioportalStats?.recentStudies.slice(0, 10).map((study, idx) => (
-                    <div key={idx} className="p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-semibold text-gray-900 text-sm">{study.name}</h4>
-                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                          {study.cancerType}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between items-center text-xs text-gray-600">
-                        <span>{study.citation || 'Clinical study'}</span>
-                        <span className="font-medium text-gray-900">{study.samples.toLocaleString()} samples</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Outcomes Tab */}

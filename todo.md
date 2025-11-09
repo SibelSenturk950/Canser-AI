@@ -70,3 +70,8 @@
 - [x] Add caching for API responses (browser-level)
 - [x] Test all API integrations
 - [x] Update documentation
+
+## Phase 7: UI Improvements
+- [x] Remove Studies tab from frontend
+- [x] Keep only 3 tabs: Overview, Outcomes, AI Models
+- [x] Update TabsList grid to 3 columns
