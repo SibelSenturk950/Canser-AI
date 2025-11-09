@@ -75,3 +75,10 @@
 - [x] Remove Studies tab from frontend
 - [x] Keep only 3 tabs: Overview, Outcomes, AI Models
 - [x] Update TabsList grid to 3 columns
+
+## Phase 8: Remove Manus References
+- [x] Search for all "Manus" references in project files
+- [x] Remove Manus mentions from README.md
+- [x] Check frontend files for Manus references
+- [x] Keep "by Sibel" attribution
+- [ ] Push updated version to GitHub

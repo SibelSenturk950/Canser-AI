@@ -148,7 +148,7 @@ cd cancercare-ai-sibel
 pnpm install
 ```
 
-2. Configure environment variables (automatically injected in Manus platform)
+2. Configure environment variables
 
 3. Push database schema:
 ```bash
@@ -229,7 +229,7 @@ baseResponse = 65
 ## 🔐 Security & Compliance
 
 - Role-based access control (admin/user)
-- Manus OAuth authentication
+- OAuth authentication
 - Encrypted data storage
 - HIPAA-ready architecture
 - Audit logging capabilities
@@ -297,7 +297,7 @@ The following features from the original CancerAI have been **intentionally remo
 ## 👥 Credits
 
 **Developed by**: Sibel  
-**Platform**: Manus AI  
+**Platform**: CancerAI Research Platform  
 **Data Source**: cBioPortal for Cancer Genomics  
 **Based on**: Original CancerAI Project (genomic analysis removed, real API added)  
 **License**: Educational and research purposes
