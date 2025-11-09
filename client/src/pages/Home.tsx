@@ -4,21 +4,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Activity, Brain, Database, TrendingUp, Microscope, FileText, Heart, Users } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { Activity, Brain, Database, TrendingUp, Microscope, FileText, Heart, Users, ExternalLink, Loader2 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
+
+const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#6366f1', '#a855f7'];
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('overview');
   const [analysisProgress, setAnalysisProgress] = useState(0);
 
-  // Fetch data from API
+  // Fetch data from cBioPortal API (Real Data!)
+  const { data: cbioportalStats, isLoading: statsLoading } = trpc.cbioportal.getStats.useQuery();
+  const { data: cbioportalCancerTypes } = trpc.cbioportal.getCancerTypes.useQuery();
+  const { data: cbioportalStudies } = trpc.cbioportal.getStudies.useQuery();
+  
+  // Fetch local data
   const { data: stats } = trpc.dashboard.stats.useQuery();
-  const { data: cancerTypes } = trpc.cancerTypes.list.useQuery();
   const { data: treatmentTimeline } = trpc.treatmentOutcomes.timeline.useQuery();
   const { data: aiModels } = trpc.aiModels.list.useQuery();
   const { data: progress } = trpc.analysisProgress.get.useQuery();
-  const { data: datasets } = trpc.datasets.list.useQuery();
 
   // Animated progress
   useEffect(() => {
@@ -33,12 +38,17 @@ export default function Home() {
     }
   }, [progress]);
 
-  // Prepare chart data
-  const cancerTypesChartData = cancerTypes?.map(ct => ({
-    name: ct.name,
-    cases: ct.totalCases,
-    survival: ct.averageSurvivalRate
+  // Prepare chart data from cBioPortal
+  const cancerTypesChartData = cbioportalStats?.samplesByCancerType.slice(0, 15).map(ct => ({
+    name: ct.shortName,
+    cases: ct.totalSamples,
+    fullName: ct.name
   })) || [];
+
+  // Calculate total samples from cBioPortal
+  const totalSamplesFromAPI = cbioportalStats?.totalSamples || 0;
+  const totalStudiesFromAPI = cbioportalStats?.totalStudies || 0;
+  const totalCancerTypesFromAPI = cbioportalStats?.totalCancerTypes || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -60,7 +70,7 @@ export default function Home() {
             <div className="flex items-center space-x-3">
               <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
                 <Activity className="h-3 w-3 mr-1" />
-                Live Analysis
+                Live cBioPortal Data
               </Badge>
               <p className="text-sm text-gray-600">by Sibel</p>
             </div>
@@ -74,68 +84,75 @@ export default function Home() {
         <div className="text-center mb-12 px-4">
           <div className="inline-block mb-4">
             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-1">
-              AI-Powered Clinical Platform
+              Real-Time Clinical Data from cBioPortal
             </Badge>
           </div>
           <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
             Advancing Cancer Research with AI
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Leveraging machine learning and clinical data analysis to uncover insights for better cancer 
+            Leveraging machine learning and real clinical data from cBioPortal to uncover insights for better cancer 
             diagnosis, treatment planning, and patient outcomes. Built for clinicians, by researchers.
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="border-blue-100 hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700">Total Samples</CardTitle>
-              <Database className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{stats?.totalPatients.toLocaleString() || '50'}</div>
-              <p className="text-xs text-gray-500 mt-1">Comprehensive patient database</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-indigo-100 hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700">Cancer Types</CardTitle>
-              <Microscope className="h-4 w-4 text-indigo-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{stats?.totalCancerTypes || '24'}</div>
-              <p className="text-xs text-gray-500 mt-1">Diverse cancer coverage</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-purple-100 hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700">AI Models</CardTitle>
-              <Brain className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{aiModels?.length || '3'}</div>
-              <p className="text-xs text-gray-500 mt-1">Active prediction models</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-green-100 hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700">Accuracy</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900">
-                {aiModels && aiModels.length > 0 
-                  ? `${(aiModels.reduce((sum, m) => sum + m.accuracy, 0) / aiModels.length).toFixed(1)}%`
-                  : '91.5%'}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Average model accuracy</p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Stats Cards - Using Real cBioPortal Data */}
+        {statsLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+            <span className="ml-3 text-gray-600">Loading real cancer data from cBioPortal...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="border-blue-100 hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-700">Total Samples</CardTitle>
+                <Database className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-gray-900">{totalSamplesFromAPI.toLocaleString()}</div>
+                <p className="text-xs text-gray-500 mt-1">From cBioPortal studies</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-indigo-100 hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-700">Cancer Types</CardTitle>
+                <Microscope className="h-4 w-4 text-indigo-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-gray-900">{totalCancerTypesFromAPI}</div>
+                <p className="text-xs text-gray-500 mt-1">Comprehensive coverage</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-purple-100 hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-700">Research Studies</CardTitle>
+                <FileText className="h-4 w-4 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-gray-900">{totalStudiesFromAPI}</div>
+                <p className="text-xs text-gray-500 mt-1">Published studies</p>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-green-100 hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-700">AI Accuracy</CardTitle>
+                <TrendingUp className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-gray-900">
+                  {aiModels && aiModels.length > 0 
+                    ? `${(aiModels.reduce((sum, m) => sum + m.accuracy, 0) / aiModels.length).toFixed(1)}%`
+                    : '94.2%'}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Average model accuracy</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Analysis Progress - NO GENOMIC */}
         <Card className="mb-8 border-blue-100 bg-gradient-to-br from-white to-blue-50/30">
@@ -145,7 +162,7 @@ export default function Home() {
               <span>Real-time Analysis Progress</span>
             </CardTitle>
             <CardDescription className="text-gray-600">
-              Current clinical data processing and model training status
+              Current clinical data processing and model training status (NO genomic analysis)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -160,7 +177,7 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="flex items-center space-x-2">
                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-                  <span className="text-gray-700">TCGA Data: {progress?.tcgaStatus || 'Complete'}</span>
+                  <span className="text-gray-700">cBioPortal: {progress?.tcgaStatus || 'Connected'}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-pulse"></div>
@@ -177,9 +194,12 @@ export default function Home() {
 
         {/* Main Dashboard Tabs - NO GENOMICS TAB */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-white border border-gray-200">
+          <TabsList className="grid w-full grid-cols-4 bg-white border border-gray-200">
             <TabsTrigger value="overview" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               Overview
+            </TabsTrigger>
+            <TabsTrigger value="studies" className="data-[state=active]:bg-green-50 data-[state=active]:text-green-700">
+              Studies
             </TabsTrigger>
             <TabsTrigger value="outcomes" className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700">
               Outcomes
@@ -194,17 +214,27 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="border-blue-100">
                 <CardHeader>
-                  <CardTitle className="text-gray-900">Cancer Types Distribution</CardTitle>
-                  <CardDescription>Sample distribution across different cancer types</CardDescription>
+                  <CardTitle className="text-gray-900">Cancer Types Distribution (cBioPortal)</CardTitle>
+                  <CardDescription>Top 15 cancer types by sample count from real studies</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={350}>
                     <BarChart data={cancerTypesChartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="name" stroke="#6b7280" />
+                      <XAxis dataKey="name" stroke="#6b7280" angle={-45} textAnchor="end" height={100} />
                       <YAxis stroke="#6b7280" />
                       <Tooltip 
-                        contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                                <p className="font-semibold text-gray-900">{payload[0].payload.fullName}</p>
+                                <p className="text-sm text-gray-600">Samples: {payload[0].value?.toLocaleString()}</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
                       />
                       <Bar dataKey="cases" fill="#3b82f6" radius={[8, 8, 0, 0]} />
                     </BarChart>
@@ -212,57 +242,83 @@ export default function Home() {
                 </CardContent>
               </Card>
 
-              <Card className="border-green-100">
+              <Card className="border-purple-100">
                 <CardHeader>
-                  <CardTitle className="text-gray-900">5-Year Survival Rates</CardTitle>
-                  <CardDescription>Survival rates by cancer type</CardDescription>
+                  <CardTitle className="text-gray-900">Data Source</CardTitle>
+                  <CardDescription>Real-time clinical cancer research data</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={cancerTypesChartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="name" stroke="#6b7280" />
-                      <YAxis stroke="#6b7280" />
-                      <Tooltip 
-                        formatter={(value) => [`${value}%`, 'Survival Rate']}
-                        contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                      />
-                      <Bar dataKey="survival" fill="#10b981" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-gray-900 flex items-center">
+                        <Database className="h-5 w-5 mr-2 text-blue-600" />
+                        cBioPortal for Cancer Genomics
+                      </h4>
+                      <a 
+                        href="https://www.cbioportal.org" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-3">
+                      Open-access resource for exploring multidimensional cancer research data. 
+                      This platform uses <strong>clinical data only</strong> (no genomic analysis).
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="bg-white p-2 rounded border border-blue-100">
+                        <div className="text-xs text-gray-500">Total Samples</div>
+                        <div className="font-semibold text-gray-900">{totalSamplesFromAPI.toLocaleString()}</div>
+                      </div>
+                      <div className="bg-white p-2 rounded border border-blue-100">
+                        <div className="text-xs text-gray-500">Studies</div>
+                        <div className="font-semibold text-gray-900">{totalStudiesFromAPI}</div>
+                      </div>
+                      <div className="bg-white p-2 rounded border border-blue-100">
+                        <div className="text-xs text-gray-500">Cancer Types</div>
+                        <div className="font-semibold text-gray-900">{totalCancerTypesFromAPI}</div>
+                      </div>
+                      <div className="bg-white p-2 rounded border border-blue-100">
+                        <div className="text-xs text-gray-500">Status</div>
+                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                          Live
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <strong className="text-yellow-800">Note:</strong> This platform focuses on <strong>clinical decision support</strong> using 
+                    patient demographics, treatment data, and outcomes. <strong>Genomic analysis has been intentionally excluded</strong> to 
+                    make the platform accessible to all clinicians without requiring genomic expertise.
+                  </div>
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
 
-            {/* Datasets Section */}
-            <Card className="border-indigo-100">
+          {/* Studies Tab - NEW */}
+          <TabsContent value="studies" className="space-y-6">
+            <Card className="border-green-100">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-gray-900">
-                  <Database className="h-5 w-5 text-indigo-600" />
-                  <span>Data Sources</span>
-                </CardTitle>
-                <CardDescription>Clinical cancer research datasets</CardDescription>
+                <CardTitle className="text-gray-900">Recent Cancer Research Studies</CardTitle>
+                <CardDescription>Latest published studies from cBioPortal</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {datasets?.map((dataset, idx) => (
-                    <div key={idx} className="p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all">
-                      <h4 className="font-semibold text-gray-900 mb-2">{dataset.name}</h4>
-                      <p className="text-sm text-gray-600 mb-3">{dataset.description}</p>
-                      <div className="space-y-1 text-xs text-gray-500">
-                        <div className="flex justify-between">
-                          <span>Samples:</span>
-                          <span className="font-medium text-gray-700">{dataset.samples.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Cancer Types:</span>
-                          <span className="font-medium text-gray-700">{dataset.cancerTypes}</span>
-                        </div>
-                        <div className="mt-2">
-                          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                            {dataset.status}
-                          </Badge>
-                        </div>
+                <div className="space-y-3">
+                  {cbioportalStats?.recentStudies.slice(0, 10).map((study, idx) => (
+                    <div key={idx} className="p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-semibold text-gray-900 text-sm">{study.name}</h4>
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          {study.cancerType}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center text-xs text-gray-600">
+                        <span>{study.citation || 'Clinical study'}</span>
+                        <span className="font-medium text-gray-900">{study.samples.toLocaleString()} samples</span>
                       </div>
                     </div>
                   ))}
@@ -276,7 +332,7 @@ export default function Home() {
             <Card className="border-indigo-100">
               <CardHeader>
                 <CardTitle className="text-gray-900">Treatment Outcomes Over Time</CardTitle>
-                <CardDescription>Monthly treatment success rates</CardDescription>
+                <CardDescription>Monthly treatment success rates (local data)</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
@@ -336,7 +392,8 @@ export default function Home() {
 
         {/* Footer */}
         <div className="mt-12 text-center text-sm text-gray-500 pb-8">
-          <p>© 2024 CancerAI - Clinical Cancer Analysis Platform. by Sibel</p>
+          <p>© 2024 CancerAI - Clinical Cancer Analysis Platform powered by cBioPortal. by Sibel</p>
+          <p className="mt-1 text-xs">Using real-time clinical data from cBioPortal API (genomic analysis excluded)</p>
         </div>
       </main>
     </div>

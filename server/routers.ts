@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import * as cbioportal from "./cbioportal";
 
 export const appRouter = router({
   system: systemRouter,
@@ -298,6 +299,24 @@ export const appRouter = router({
           modelUsed: "Drug Response Model v1.8",
           predictionDate: new Date().toISOString(),
         };
+      }),
+  }),
+
+  // cBioPortal API Integration (Real Cancer Data - Clinical Only, No Genomics)
+  cbioportal: router({
+    getCancerTypes: publicProcedure.query(async () => {
+      return await cbioportal.getCancerTypes();
+    }),
+    getStudies: publicProcedure.query(async () => {
+      return await cbioportal.getStudies(100);
+    }),
+    getStats: publicProcedure.query(async () => {
+      return await cbioportal.getAggregatedStats();
+    }),
+    getCancerTypeDetails: publicProcedure
+      .input(z.string())
+      .query(async ({ input }) => {
+        return await cbioportal.getCancerTypeDetails(input);
       }),
   }),
 });

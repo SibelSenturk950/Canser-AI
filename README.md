@@ -2,17 +2,20 @@
 
 **by Sibel**
 
-An AI-powered clinical cancer research platform focusing on treatment analysis, survival prediction, and clinical data management. **Genomic analysis has been removed** to focus on practical clinical decision support using accessible clinical parameters.
+An AI-powered clinical cancer research platform using **real-time data from cBioPortal API**. Focuses on treatment analysis, survival prediction, and clinical data management. **Genomic analysis has been removed** to focus on practical clinical decision support using accessible clinical parameters.
 
 ## 🎯 Project Overview
 
-CancerAI is a streamlined cancer research platform that emphasizes **clinical AI** over genomic complexity. Based on the original CancerAI project but with all genomic features removed, it provides:
+CancerAI is a streamlined cancer research platform that emphasizes **clinical AI** over genomic complexity. It integrates with **cBioPortal's public API** to access real cancer research data while excluding all genomic features.
 
+### Key Features
+
+- **Real-Time Clinical Data**: Live integration with cBioPortal API (508+ studies, 898 cancer types)
 - **Clinical Data Analysis**: Patient demographics, treatment histories, and outcome tracking
 - **AI Prediction Models**: Survival prediction and drug response forecasting
 - **Treatment Analytics**: Analysis of treatment outcomes and efficacy
 - **Real-time Monitoring**: Live analysis progress and model training status
-- **Multi-source Data**: Integration with TCGA, CRDC, and TCIA (clinical data only)
+- **No Genomic Data**: Focuses exclusively on clinical parameters
 
 ## 🏗️ Architecture
 
@@ -23,6 +26,7 @@ CancerAI is a streamlined cancer research platform that emphasizes **clinical AI
 - tRPC 11 (type-safe API)
 - Drizzle ORM
 - MySQL/TiDB database
+- **cBioPortal REST API integration**
 
 **Frontend:**
 - React 19
@@ -31,13 +35,34 @@ CancerAI is a streamlined cancer research platform that emphasizes **clinical AI
 - shadcn/ui components
 - Wouter for routing
 
+### External API Integration
+
+**cBioPortal for Cancer Genomics**
+- Base URL: `https://www.cbioportal.org/api`
+- Type: Public REST API (no authentication required)
+- Data Type: Clinical cancer research data only (NO genomic data)
+- License: Open-access, free for academic and research use
+- Documentation: https://www.cbioportal.org/api/swagger-ui/index.html
+
+**Endpoints Used:**
+- `/cancer-types` - Get all cancer type definitions
+- `/studies` - Get published cancer research studies
+- `/studies/{studyId}/clinical-data` - Get clinical data for specific studies
+- `/studies/{studyId}/patients` - Get patient information
+
+**Data Retrieved:**
+- 508+ published cancer research studies
+- 898 cancer type definitions
+- Real sample counts and study metadata
+- Clinical attributes (NO genomic mutations)
+
 ### Database Schema
 
-Single unified MySQL/TiDB database with 9 tables:
+Single unified MySQL/TiDB database with 9 tables (for local AI predictions and user data):
 
 - `users` - User authentication and roles
-- `cancer_types` - Cancer type definitions (24 types)
-- `patients` - Patient demographic and diagnosis information (50 patients)
+- `cancer_types` - Cancer type definitions (24 local types for demo)
+- `patients` - Patient demographic and diagnosis information (50 demo patients)
 - `treatment_records` - Treatment history and protocols
 - `treatment_outcomes` - Treatment response and results
 - `survival_data` - Patient survival and follow-up information
@@ -47,11 +72,10 @@ Single unified MySQL/TiDB database with 9 tables:
 
 ## 🚀 Features
 
-### 1. Dashboard & Statistics
-- Real-time patient statistics (50 samples, 24 cancer types)
-- Cancer type distribution charts
-- 5-year survival rate visualizations
-- Treatment outcome trends
+### 1. Dashboard & Statistics (Real cBioPortal Data)
+- Real-time cancer statistics from cBioPortal (508 studies, 898 cancer types)
+- Cancer type distribution charts (top 15 by sample count)
+- Research studies list with citations
 - AI model performance metrics (94.2% average accuracy)
 
 ### 2. AI Prediction Models
@@ -78,31 +102,35 @@ Single unified MySQL/TiDB database with 9 tables:
 - Clinical data processing status
 - Model training progress
 - Validation status
-- TCGA data integration status
+- cBioPortal connection status
 
-### 4. Data Sources (Clinical Only)
-- **TCGA** (The Cancer Genome Atlas) - 11,000 samples, 33 cancer types
-- **CRDC** (Cancer Research Data Commons) - 8,500 samples, 25 cancer types
-- **TCIA** (The Cancer Imaging Archive) - 12,450 samples, 20 cancer types
+### 4. Data Sources
 
-### 5. Treatment Analytics
-- Monthly treatment outcome trends
-- Success/partial/failure rate tracking
-- Timeline visualization
+**Primary: cBioPortal API (Real-Time)**
+- 508+ published cancer research studies
+- 898 cancer type definitions
+- Comprehensive clinical characterization
+- Open-access, no authentication required
+
+**Local Database (Demo/Training)**
+- 50 demo patients for AI model testing
+- Treatment outcome tracking
+- AI prediction storage
 
 ## 📊 Key Differences from Original CancerAI
 
-| Feature | Original CancerAI | This Version (No Genomics) |
-|---------|------------------|----------------------------|
-| **Genomic Analysis** | ✅ Extensive (TP53, KRAS, PIK3CA, EGFR, BRAF) | ❌ Completely Removed |
+| Feature | Original CancerAI | This Version |
+|---------|------------------|--------------|
+| **Genomic Analysis** | ✅ Extensive (TP53, KRAS, etc.) | ❌ Completely Removed |
 | **Genomics Tab** | ✅ Present | ❌ Removed |
-| **Gene Mutations** | ✅ Pie charts, frequency analysis | ❌ Not included |
-| **Data Processing** | Genomic + Clinical | Clinical Only |
-| **Focus** | Research & Genomics | Clinical Decision Support |
-| **Target Users** | Researchers & Geneticists | Clinicians & Healthcare Providers |
-| **Model Features** | Genomic + Clinical | Clinical Parameters Only |
-| **Complexity** | High | Moderate |
-| **Accessibility** | Requires genomic expertise | Accessible to all clinicians |
+| **Gene Mutations** | ✅ Pie charts, analysis | ❌ Not included |
+| **Data Source** | Mock/Simulated | **✅ Real cBioPortal API** |
+| **Sample Count** | 50 (mock) | **✅ 508+ studies (real)** |
+| **Cancer Types** | 24 (local) | **✅ 898 types (real)** |
+| **Data Processing** | Genomic + Clinical | **Clinical Only** |
+| **Focus** | Research & Genomics | **Clinical Decision Support** |
+| **Target Users** | Researchers & Geneticists | **Clinicians & Healthcare Providers** |
+| **Accessibility** | Requires genomic expertise | **Accessible to all clinicians** |
 
 ## 🔧 Development
 
@@ -110,6 +138,7 @@ Single unified MySQL/TiDB database with 9 tables:
 - Node.js 22+
 - pnpm
 - MySQL/TiDB database
+- Internet connection (for cBioPortal API)
 
 ### Setup
 
@@ -138,16 +167,20 @@ pnpm dev
 
 The application will be available at `http://localhost:3000`
 
-### Database Management
+### Testing cBioPortal API
 
-**Update schema:**
+Test API endpoints directly:
+
 ```bash
-# Edit drizzle/schema.ts
-pnpm db:push
-```
+# Get cancer types
+curl https://www.cbioportal.org/api/cancer-types
 
-**View database:**
-Use the Database panel in Manus Management UI
+# Get studies
+curl https://www.cbioportal.org/api/studies?pageSize=10
+
+# Get clinical data for a study
+curl https://www.cbioportal.org/api/studies/acc_tcga/clinical-data
+```
 
 ## 🎨 Design
 
@@ -157,6 +190,7 @@ Use the Database panel in Manus Management UI
 - **Responsive**: Mobile-first design
 - **Accessibility**: WCAG-compliant colors and keyboard navigation
 - **Charts**: Interactive visualizations using Recharts
+- **Real-Time Data**: Live badges and status indicators
 
 ## 📈 AI Model Details
 
@@ -199,41 +233,24 @@ baseResponse = 65
 - Encrypted data storage
 - HIPAA-ready architecture
 - Audit logging capabilities
+- **cBioPortal API**: Public data, no PHI/PII
 
 ## 📝 API Endpoints
 
-### Cancer Types
-- `cancerTypes.list` - Get all cancer types
-- `cancerTypes.getById` - Get specific cancer type
+### cBioPortal Integration
+- `cbioportal.getCancerTypes` - Get all cancer types from cBioPortal
+- `cbioportal.getStudies` - Get published studies
+- `cbioportal.getStats` - Get aggregated statistics
+- `cbioportal.getCancerTypeDetails` - Get specific cancer type info
 
-### Patients
-- `patients.list` - List all patients
-- `patients.getById` - Get patient details
-- `patients.getTreatments` - Get patient treatments
-- `patients.getOutcomes` - Get treatment outcomes
-- `patients.getSurvival` - Get survival data
-- `patients.getImages` - Get medical images
-- `patients.getPredictions` - Get AI predictions
-
-### Dashboard
-- `dashboard.stats` - Get overall statistics
-- `dashboard.treatmentOutcomes` - Get outcome statistics
-
-### Treatment Outcomes
-- `treatmentOutcomes.timeline` - Get monthly outcomes
-
-### Datasets
-- `datasets.list` - Get available datasets info
-
-### AI Models
-- `aiModels.list` - Get all AI models info
-
-### Analysis Progress
-- `analysisProgress.get` - Get current analysis status
-
-### Predictions
-- `predictions.survivalPrediction` - Predict 5-year survival rate
-- `predictions.drugResponsePrediction` - Predict drug response rate
+### Local Data Management
+- `cancerTypes.list` - Get local cancer types
+- `patients.list` - List demo patients
+- `dashboard.stats` - Get local statistics
+- `treatmentOutcomes.timeline` - Get outcome trends
+- `aiModels.list` - Get AI model information
+- `predictions.survivalPrediction` - Predict survival rate
+- `predictions.drugResponsePrediction` - Predict drug response
 
 ## 🎯 Features Excluded (Genomic)
 
@@ -247,9 +264,18 @@ The following features from the original CancerAI have been **intentionally remo
 - ❌ Molecular subtyping
 - ❌ Genomic profiling
 
+## 🌐 External Resources
+
+- **cBioPortal Website**: https://www.cbioportal.org
+- **cBioPortal API Docs**: https://www.cbioportal.org/api/swagger-ui/index.html
+- **cBioPortal GitHub**: https://github.com/cBioPortal/cbioportal
+- **TCGA (via cBioPortal)**: The Cancer Genome Atlas clinical data
+- **SEER**: Surveillance, Epidemiology, and End Results Program
+
 ## 📚 Documentation
 
 - **API Documentation**: tRPC procedures in `server/routers.ts`
+- **cBioPortal Integration**: `server/cbioportal.ts`
 - **Database Schema**: Defined in `drizzle/schema.ts`
 - **Frontend Components**: Located in `client/src/`
 - **Type Definitions**: Auto-generated from tRPC and Drizzle
@@ -260,23 +286,28 @@ The following features from the original CancerAI have been **intentionally remo
 - [ ] Treatment planning module
 - [ ] Advanced survival analysis (Kaplan-Meier curves)
 - [ ] Medical image upload and classification
-- [ ] Clinical trial matching
+- [ ] Clinical trial matching (via cBioPortal)
 - [ ] PDF report generation
 - [ ] Multi-language support
 - [ ] Export data to CSV/Excel
 - [ ] Advanced filtering and search
+- [ ] Integration with more cBioPortal endpoints
+- [ ] Caching layer for API responses
 
 ## 👥 Credits
 
 **Developed by**: Sibel  
 **Platform**: Manus AI  
-**Based on**: Original CancerAI Project (genomic analysis removed)  
+**Data Source**: cBioPortal for Cancer Genomics  
+**Based on**: Original CancerAI Project (genomic analysis removed, real API added)  
 **License**: Educational and research purposes
 
 ## ⚠️ Disclaimer
 
-This platform is designed for clinical decision support and research purposes only. All AI predictions should be validated by qualified healthcare providers and should not replace professional medical judgment.
+This platform is designed for clinical decision support and research purposes only. All AI predictions should be validated by qualified healthcare providers and should not replace professional medical judgment. Data from cBioPortal is used for research and educational purposes in accordance with their terms of service.
 
 ---
 
-© 2024 CancerAI - Clinical Cancer Analysis Platform. by Sibel
+© 2024 CancerAI - Clinical Cancer Analysis Platform powered by cBioPortal. by Sibel
+
+**Using real-time clinical data from cBioPortal API (genomic analysis excluded)**
